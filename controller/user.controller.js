@@ -1,31 +1,56 @@
-const db = require('../db')
+const userService = require("../service/user.service");
 
 class UserController {
-    async createUser(req, res){
-        const {name, surname, phone, password} = req.body
-        const newPerson = await db.query(`INSERT INTO users (name, surname, phone, password) VALUES ($1, $2, $3, $4) RETURNING *`,[name, surname, phone, password])
-        res.json(newPerson.rows[0])
+  async createUser(req, res) {
+    try {
+      const newPerson = await userService.createUser(req.body);
+      res.status(201).json(newPerson);
+    } catch (err) {
+      if ((err.code = 23505)) {
+        res
+          .status(400)
+          .send("Пользователь с таким номером уже зарегистрирован");
+      }
     }
-    async getAllUsers(req, res){
-        const allUsers = await db.query(`SELECT * from users`)
-        res.json(allUsers.rows)
+  }
+  async getAllUsers(req, res) {
+    try {
+      const allUsers = await userService.getAllUsers();
+      res.json(allUsers);
+    } catch (err) {
+      res.status(500).send(err);
     }
-    async getUser(req, res){
-        const id = req.params.id;
-        const user = await db.query(`SELECT * from users WHERE id = ${id}`)
-        res.json(user.rows[0])
+  }
+  async getUser(req, res) {
+    try {
+      const id = req.params.id;
+      const user = await userService.getUser(id);
+      res.json(user);
+    } catch (err) {
+      res.status(400).send(err.message);
     }
-    async updateUser(req, res){
-        const {name, surname, phone, password} = req.body
-        const id = req.params.id;
-        const newPerson = await db.query(`UPDATE users SET name = $1, surname = $2, phone = $3, password = $4 WHERE id = ${id} RETURNING *`,[name, surname, phone, password])
-        res.json(newPerson.rows[0])
+  }
+  async updateUser(req, res) {
+    try {
+      const id = req.params.id;
+      const newPerson = await userService.updateUser(id, req.body);
+      res.json(newPerson);
+    } catch (err) {
+      if ((err.code = 23505)) {
+        res.status(400).send("Этот номер уже занят");
+      }
+      res.status(500).send(err);
     }
-    async deleteUser(req, res){
-        const id = req.params.id;
-        await db.query(`DELETE FROM users WHERE id = ${id}`)
-        res.json('ok')
+  }
+  async deleteUser(req, res) {
+    try {
+      const id = req.params.id;
+      const message = await userService.deleteUser(id);
+      res.status(204);
+    } catch (err) {
+      res.status(500).send(err.message);
     }
+  }
 }
 
-module.exports = new UserController()
+module.exports = new UserController();

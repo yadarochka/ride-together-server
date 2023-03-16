@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Выбор точки на карте и вывод ее адреса</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        .marker { background-image: url('https://docs.mapbox.com/help/demos/custom-markers-gl-js/mapbox-icon.png'); background-size: cover; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoieWFkYXJvNGthIiwiYSI6ImNsZjdjZXdscTFkaTMzdG9jbnNhNTBiZ3cifQ.gbKXjjN-ea347B-MUmTuFA';
+
+        let marker;
+
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11?language=ru',
+            center: [55.972058, 54.738317],
+            zoom: 13
+        });
+
+        map.on('click', function (e) {
+            var lngLat = e.lngLat;
+            var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + lngLat.lng + ',' + lngLat.lat + '.json?access_token=' + mapboxgl.accessToken;
+
+            fetch(url)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    console.log(data.features[0]);
+                });
+
+                if (marker){
+                    marker.remove()
+                    marker = new mapboxgl.Marker()
+                        .setLngLat(lngLat)
+                        .addTo(map);
+                }
+                else{
+                    marker = new mapboxgl.Marker()
+                        .setLngLat(lngLat)
+                        .addTo(map);
+                }
+
+            
+        });
+    </script>
+</body>
+</html>
