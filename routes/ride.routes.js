@@ -2,13 +2,17 @@ const Router = require("express");
 const rideRouter = new Router();
 const rideController = require("../controller/ride.controller");
 
-rideRouter.post("/create", rideController.createRide);
+rideRouter.post("/", rideController.createRide);
 rideRouter.get("/", rideController.getAllRides);
-rideRouter.get("/:id", rideController.getRideById);
-rideRouter.put("/:id", rideController.updateRide);
-rideRouter.delete("/:id", rideController.deleteRide);
-rideRouter.get("/driver/:id", rideController.getRidesByDriverId);
-rideRouter.get("/location", rideController.getRidesByCoordinates);
-rideRouter.post("/add", rideController.addPassengerToRide);
+
+rideRouter.get("/:ride_id", rideController.getRideById);
+rideRouter.put("/:ride_id", rideController.updateRide);
+rideRouter.delete("/:ride_id", rideController.deleteRide);
+
+rideRouter.get("/driver/:driver_id", rideController.getRidesByDriverId);
+
+rideRouter.post("/location", rideController.getRidesByCoordinates);
+
+rideRouter.post("/passengers", rideController.addPassengerToRide);
 
 module.exports = rideRouter;
