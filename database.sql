@@ -22,9 +22,15 @@ CREATE TABLE rating(
   FOREIGN KEY (to_user_id) REFERENCES users (id)
 );
 
+CREATE TABLE IF NOT EXISTS status_ride (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE ride (
   id SERIAL PRIMARY KEY,
-  driver_id INTEGER, 
+  driver_id INTEGER NOT NULL, 
+  status_id INTEGER NOT NULL,
   departure_location NUMERIC[] NOT NULL,
   arrival_location NUMERIC[] NOT NULL,
   departure_date TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -32,7 +38,8 @@ CREATE TABLE ride (
   total_seats INTEGER NOT NULL,
   price INTEGER NOT NULL,
   additional_details VARCHAR(255),
-  FOREIGN KEY (driver_id) REFERENCES users (id)
+  FOREIGN KEY (driver_id) REFERENCES users (id),
+  FOREIGN KEY (status_id) REFERENCES status_ride (id)
 );
 
 CREATE TABLE user_ride (
@@ -46,7 +53,3 @@ INSERT INTO gender (gender) VALUES ('Мужской');
 INSERT INTO gender (gender) VALUES ('Женский');
 
 ALTER TABLE user_ride ADD CONSTRAINT unique_ride_user_idx UNIQUE (ride_id, user_id);
-
-CREATE EXTENSION IF NOT EXISTS postgis;
-SET search_path TO public, postgis;
-SELECT * FROM ride WHERE ST_Distance_Sphere(SELECT ST_MakePoint(55.7558, 37.6173), ST_MakePoint(55.7558, 37.6173)) < 10000
