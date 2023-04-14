@@ -19,7 +19,14 @@ class AuthController{
         res.send('LOGOUT')
     }
     async activate(req,res){
-        res.send('ACTIVATE')
+        try{
+            const activationLink = req.params.link;
+            await authService.activationMail(activationLink)
+            res.redirect(process.env.CLIENT_URL)
+        }
+        catch(e){
+            res.send(e.message)
+        }
     }
     async refresh(req,res){
         res.send('REFRESH')

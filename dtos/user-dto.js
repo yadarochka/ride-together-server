@@ -6,7 +6,7 @@ module.exports = class UserDto {
     constructor(user){
         this.email = user.email;
         this.id = user.id;
-        this.isActivated = false;
+        this.isActivated = user.is_activate;
         this.name = user.name;
         this.surname = user.surname;
         this.phone = user.phone;

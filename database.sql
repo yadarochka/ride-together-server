@@ -7,9 +7,11 @@ CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(30) NOT NULL,
   surname VARCHAR(30) NOT NULL,
+  activation_link VARCHAR(50),
+  is_activate BOOLEAN,
   phone VARCHAR(15) NOT NULL UNIQUE,
   email VARCHAR(30) NOT NULL UNIQUE,
-  password VARCHAR(30) NOT NULL,
+  password VARCHAR(60) NOT NULL,
   gender_id INTEGER NOT NULL, 
   FOREIGN KEY (gender_id) REFERENCES gender (id)
 );
@@ -52,7 +54,7 @@ CREATE TABLE user_ride (
 
 CREATE TABLE tokens (
   user_id INTEGER,
-  token VARCHAR(300),
+  token VARCHAR(500),
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
