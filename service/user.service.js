@@ -2,10 +2,10 @@ const db = require("../db");
 
 class UserService {
   async createUser(user) {
-    const { name, surname, phone, password, gender_id } = user;
+    const { name, surname, phone, password, gender_id, email } = user;
     const newPerson = await db.query(
-      `INSERT INTO users (name, surname, phone, password, gender_id) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, surname, phone, password, gender_id]
+      `INSERT INTO users (name, surname, phone, password, gender_id, email) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, surname, phone, password, gender_id, email]
     );
     return newPerson.rows[0];
   }

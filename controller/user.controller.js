@@ -1,18 +1,6 @@
 const userService = require("../service/user.service");
 
 class UserController {
-  async createUser(req, res) {
-    try {
-      const newPerson = await userService.createUser(req.body);
-      res.status(201).json(newPerson);
-    } catch (err) {
-      if ((err.code = 23505)) {
-        res
-          .status(400)
-          .send("Пользователь с таким номером уже зарегистрирован");
-      }
-    }
-  }
   async getAllUsers(req, res) {
     try {
       const allUsers = await userService.getAllUsers();
