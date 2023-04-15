@@ -2,7 +2,6 @@ const db = require("../db");
 const bcrypt = require("bcrypt")
 const uuid = require('uuid');
 const UserDto = require("../dtos/user-dto");
-const userService = require("./user.service");
 const tokenService = require("./token.service");
 const mailService = require("./mail.service");
 
@@ -32,6 +31,57 @@ class AuthService {
 
 
         const userDto = new UserDto(newPerson.rows[0])
+
+        const tokens = tokenService.generateTokens({...userDto})
+
+        await tokenService.saveRefreshToken(userDto.id, tokens.refreshToken)
+
+        return {...tokens, userDto}
+    }
+
+    async login(email, password){
+        const user = (await db.query("SELECT * FROM  users WHERE email = $1", [email])).rows[0]
+
+           
+        if (!user){
+            throw new Error('Пользователь не найден')
+        }
+
+        const isPassEquals = await bcrypt.compare(password, user.password)
+
+        if (!isPassEquals){
+            throw new Error("Неверный пароль")
+        }
+
+        const userDto = new UserDto(user)
+
+        const tokens = tokenService.generateTokens({...userDto})
+
+        await tokenService.saveRefreshToken(userDto.id, tokens.refreshToken)
+
+        return {...tokens, userDto}
+         
+    }
+
+    async logout(refreshToken){
+        await tokenService.removeToken(refreshToken)
+    }
+
+    async refresh(refreshToken){
+        if (!refreshToken){
+            throw new Error("Не авторизован x1")
+        }
+
+        const userData = await tokenService.validateRefreshAccessToken(refreshToken)
+        const tokenFromDb = await tokenService.findToken(refreshToken)
+
+        if(!userData || !tokenFromDb){
+            throw new Error("Не авторизован x2")
+        }
+
+        const user = db.query("SELECT * from users WHERE id = $1", [userData.id])
+
+        const userDto = new UserDto(user)
 
         const tokens = tokenService.generateTokens({...userDto})
 

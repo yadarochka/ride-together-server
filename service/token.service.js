@@ -21,6 +21,33 @@ class TokenService {
         }
 
     }
+
+    async removeToken(refreshToken){
+        await db.query("DELETE FROM tokens WHERE token = $1", [refreshToken])
+    }
+
+    async findToken(refreshToken){
+        const token = (await db.query("SELECT token FROM tokens WHERE token = $1",[refreshToken])).rows[0]
+        return token
+    }
+
+    async validateAccessToken(accessToken){
+        try {
+            const userData = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET)
+            return userData
+        } catch (error) {
+            return null
+        }
+    }
+
+    async validateRefreshAccessToken(refreshToken){
+        try {
+            const userData = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
+            return userData
+        } catch (error) {
+            return null
+        }
+    }
 }
 
 module.exports = new TokenService()
