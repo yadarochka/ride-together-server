@@ -4,7 +4,8 @@ const cookieParser = require("cookie-parser");
 const rideRouter = require("./routes/ride.routes");
 const ratingRouter = require("./routes/rating.routes");
 const pingRouter = require("./routes/ping.routes");
-const authRouter = require("./routes/auth.routes")
+const authRouter = require("./routes/auth.routes");
+const errorMiddleware = require("./middleware/exceptions/error-middleware");
 
 require("dotenv").config();
 
@@ -19,6 +20,7 @@ app.use("/api/ride", rideRouter);
 app.use("/api/rating", ratingRouter);
 app.use("/api/ping", pingRouter)
 app.use("/api/auth", authRouter)
+app.use(errorMiddleware)
 
 const PORT = process.env.APP_PORT;
 const server = app.listen(PORT, function () {

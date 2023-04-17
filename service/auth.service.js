@@ -4,6 +4,7 @@ const uuid = require('uuid');
 const UserDto = require("../dtos/user-dto");
 const tokenService = require("./token.service");
 const mailService = require("./mail.service");
+const ApiError = require("../middleware/exceptions/api-error");
 
 class AuthService {
     async register(user){
@@ -12,7 +13,7 @@ class AuthService {
         const candidate = (await db.query("SELECT * from users WHERE phone = $1", [email])).rows[0]
 
         if (candidate){
-            throw new Error("Пользователь с такой почтой уже зарегистрирован")
+            throw ApiError.BadRequest("Пользователь с такой почтой уже зарегистрирован")
         }
         
         const hashPassword = await bcrypt.hash(password, 3)
@@ -46,13 +47,13 @@ class AuthService {
 
            
         if (!user){
-            throw new Error('Пользователь не найден')
+            throw new ApiError.NotFound('Пользователь не найден')
         }
 
         const isPassEquals = await bcrypt.compare(password, user.password)
 
         if (!isPassEquals){
-            throw new Error("Неверный пароль")
+            throw ApiError.BadRequest("Неверный пароль")
         }
 
         const userDto = new UserDto(user)
@@ -71,12 +72,12 @@ class AuthService {
 
     async refresh(refreshToken){
         if (!refreshToken){
-            throw new Error("Не авторизован x1")
+            throw ApiError.UnathorizedError("Пользователь не авторизован")
         }
         const userData = await tokenService.validateRefreshToken(refreshToken)
         const tokenFromDb = await tokenService.findToken(refreshToken)
         if(!userData || !tokenFromDb){
-            throw new Error("Не авторизован x2")
+            throw new ApiError.UnathorizedError("Пользователь не авторизован")
         }
 
 
@@ -95,7 +96,7 @@ class AuthService {
         const user = (await db.query("SELECT * from users WHERE activation_link = $1",[activationLink])).rows[0]
         
         if (!user){
-            throw new Error('Некорректная ссылка')
+            throw ApiError.NotFound('Некорректная ссылка')
         }
 
         await db.query("UPDATE users SET is_activate = true WHERE id = $1",[user.id])
