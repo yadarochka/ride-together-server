@@ -40,7 +40,7 @@ class TokenService {
         }
     }
 
-    async validateRefreshAccessToken(refreshToken){
+    async validateRefreshToken(refreshToken){
         try {
             const userData = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
             return userData

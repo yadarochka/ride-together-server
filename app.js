@@ -10,10 +10,9 @@ require("dotenv").config();
 
 const app = express();
 
-
 app.use(express.json())
-app.use(cookieParser())
 app.use(cors());
+app.use(cookieParser())
 
 app.use(express.json());
 app.use("/api/ride", rideRouter);
@@ -22,6 +21,8 @@ app.use("/api/ping", pingRouter)
 app.use("/api/auth", authRouter)
 
 const PORT = process.env.APP_PORT;
-app.listen(PORT, function () {
+const server = app.listen(PORT, function () {
   console.log(`Приложение запущено PORT = ${PORT}`);
 });
+
+module.exports = server

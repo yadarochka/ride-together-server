@@ -6,7 +6,7 @@ class AuthController{
             const {email, password} = req.body;
             const newPerson = await authService.login(email, password);
             res.cookie('refreshToken', newPerson.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
-            res.status(201).json(newPerson);
+            res.status(200).json(newPerson);
         } catch (err) {
             res.status(400).json(err.message)
             }
@@ -45,9 +45,9 @@ class AuthController{
     async refresh(req,res){
         try {
             const { refreshToken } = req.cookies
-            const user = await authService.refresh(refreshToken)
-            res.cookie('refreshToken', user.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
-            res.status(201).json(newPerson);
+            const userData = await authService.refresh(refreshToken)
+            res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
+            res.status(200).json(userData);
         } catch (error) {
             res.status(500).json(error.message)
         }

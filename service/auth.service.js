@@ -40,7 +40,9 @@ class AuthService {
     }
 
     async login(email, password){
-        const user = (await db.query("SELECT * FROM  users WHERE email = $1", [email])).rows[0]
+        const user = (await db.query(`SELECT u.*, g.gender AS gender_name
+        FROM users u
+        JOIN gender g ON u.gender_id = g.id WHERE email = $1;`,[email])).rows[0]
 
            
         if (!user){
@@ -71,15 +73,14 @@ class AuthService {
         if (!refreshToken){
             throw new Error("Не авторизован x1")
         }
-
-        const userData = await tokenService.validateRefreshAccessToken(refreshToken)
+        const userData = await tokenService.validateRefreshToken(refreshToken)
         const tokenFromDb = await tokenService.findToken(refreshToken)
-
         if(!userData || !tokenFromDb){
             throw new Error("Не авторизован x2")
         }
 
-        const user = db.query("SELECT * from users WHERE id = $1", [userData.id])
+
+        const user = (await db.query("SELECT * from users WHERE id = $1", [userData.id])).rows[0]
 
         const userDto = new UserDto(user)
 
