@@ -1,4 +1,6 @@
 const db = require("../db");
+const UserDto = require("../dtos/user-dto");
+const ApiError = require("../middleware/exceptions/api-error");
 
 class UserService {
   async createUser(user) {
@@ -16,12 +18,16 @@ class UserService {
   }
 
   async getUser(id) {
-    const user = await db.query(`SELECT * from users WHERE id = ${id}`);
-    if (user.rows[0]) {
-      return user.rows[0];
-    } else {
-      throw Error("Пользователь с таким id не существует");
+    const user = (await db.query(`SELECT u.*, g.gender AS gender_name 
+    FROM users u 
+    JOIN gender g ON u.gender_id = g.id WHERE u.id = $1`, [id])).rows[0];
+    if (user){
+      const userDto = new UserDto(user)
+      return userDto
     }
+    
+    throw ApiError.BadRequest("Пользователь с таким id не существует");
+
   }
 
   async updateUser(id, user) {

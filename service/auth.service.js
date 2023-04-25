@@ -9,11 +9,21 @@ const ApiError = require("../middleware/exceptions/api-error");
 class AuthService {
     async register(user){
         const { name, surname, phone, gender_id, password, email } = user;
+ 
+        if (!name || !surname || !phone || !gender_id || !password || !email){ 
+            throw ApiError.BadRequest("Данные для регистрации не полные")
+        }
 
-        const candidate = (await db.query("SELECT * from users WHERE phone = $1", [email])).rows[0]
+        const isNotUniqueEmail = (await db.query("SELECT * from users WHERE email = $1", [email])).rows[0]
 
-        if (candidate){
+        if (isNotUniqueEmail){
             throw ApiError.BadRequest("Пользователь с такой почтой уже зарегистрирован")
+        }
+
+        const isNotUniquePhone = (await db.query("SELECT * from users WHERE phone = $1", [phone])).rows[0]
+
+        if (isNotUniquePhone){
+            throw ApiError.BadRequest("Пользователь с таким номером уже зарегистрирован")
         }
         
         const hashPassword = await bcrypt.hash(password, 3)
@@ -47,7 +57,7 @@ class AuthService {
 
            
         if (!user){
-            throw new ApiError.NotFound('Пользователь не найден')
+            throw ApiError.NotFound('Пользователь не найден')
         }
 
         const isPassEquals = await bcrypt.compare(password, user.password)
@@ -72,16 +82,17 @@ class AuthService {
 
     async refresh(refreshToken){
         if (!refreshToken){
-            throw ApiError.UnathorizedError("Пользователь не авторизован")
+            throw ApiError.UnathorizedError("Нет токена на клиенте")
         }
-        const userData = await tokenService.validateRefreshToken(refreshToken)
         const tokenFromDb = await tokenService.findToken(refreshToken)
+        const userData = await tokenService.validateRefreshToken(refreshToken)
+        
         if(!userData || !tokenFromDb){
-            throw new ApiError.UnathorizedError("Пользователь не авторизован")
+            throw ApiError.UnathorizedError("Пользователь не авторизован x2")
         }
-
-
-        const user = (await db.query("SELECT * from users WHERE id = $1", [userData.id])).rows[0]
+        const user = (await db.query(`SELECT u.*, g.gender AS gender_name 
+        FROM users u 
+        JOIN gender g ON u.gender_id = g.id WHERE u.id = $1`, [userData.id])).rows[0]
 
         const userDto = new UserDto(user)
 

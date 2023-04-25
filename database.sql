@@ -60,5 +60,6 @@ CREATE TABLE tokens (
 
 INSERT INTO gender (gender) VALUES ('Мужской');
 INSERT INTO gender (gender) VALUES ('Женский');
+INSERT INTO gender (gender) VALUES ('Другое');
 
 ALTER TABLE user_ride ADD CONSTRAINT unique_ride_user_idx UNIQUE (ride_id, user_id);

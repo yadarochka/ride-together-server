@@ -119,9 +119,9 @@ describe('Auth Service', () => {
     test('Отсутствие токена', async () => {
       const response = await request(app)
           .get('/api/auth/refresh')
-          .expect(500);
+          .expect(401);
       
-      expect(response.body).toBe('Не авторизован x1');
+      expect(response.body.message).toBe('Пользователь не авторизован x1');
   });
   
   test('Некоректный токен', async () => {
@@ -129,9 +129,9 @@ describe('Auth Service', () => {
       const response = await request(app)
           .get('/api/auth/refresh')
           .set('Cookie', `refreshToken=${refreshToken}`)
-          .expect(500);
+          .expect(401);
       
-      expect(response.body).toBe('Не авторизован x2');
+      expect(response.body.message).toBe('Пользователь не авторизован x2');
   });
 
 })

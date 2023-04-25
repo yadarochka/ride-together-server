@@ -1,42 +1,39 @@
 const userService = require("../service/user.service");
 
 class UserController {
-  async getAllUsers(req, res) {
+  async getAllUsers(req, res, next) {
     try {
       const allUsers = await userService.getAllUsers();
       res.json(allUsers);
     } catch (err) {
-      res.status(500).send(err);
+      next(err)
     }
   }
-  async getUser(req, res) {
+  async getUser(req, res, next) {
     try {
       const id = req.params.id;
       const user = await userService.getUser(id);
       res.json(user);
     } catch (err) {
-      res.status(400).send(err.message);
+      next(err)
     }
   }
-  async updateUser(req, res) {
+  async updateUser(req, res, next) {
     try {
       const id = req.params.id;
       const newPerson = await userService.updateUser(id, req.body);
       res.json(newPerson);
     } catch (err) {
-      if ((err.code = 23505)) {
-        res.status(400).send("Этот номер уже занят");
-      }
-      res.status(500).send(err);
+      next(err)
     }
   }
-  async deleteUser(req, res) {
+  async deleteUser(req, res, next) {
     try {
       const id = req.params.id;
-      const message = await userService.deleteUser(id);
+      await userService.deleteUser(id);
       res.status(204);
     } catch (err) {
-      res.status(500).send(err.message);
+      next(err)
     }
   }
 }
