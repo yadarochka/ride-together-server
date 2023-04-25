@@ -7,8 +7,11 @@ CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(30) NOT NULL,
   surname VARCHAR(30) NOT NULL,
-  phone VARCHAR(20) NOT NULL UNIQUE,
-  password VARCHAR(30) NOT NULL,
+  activation_link VARCHAR(50),
+  is_activate BOOLEAN,
+  phone VARCHAR(15) NOT NULL UNIQUE,
+  email VARCHAR(30) NOT NULL UNIQUE,
+  password VARCHAR(60) NOT NULL,
   gender_id INTEGER NOT NULL, 
   FOREIGN KEY (gender_id) REFERENCES gender (id)
 );
@@ -24,7 +27,7 @@ CREATE TABLE rating(
 
 CREATE TABLE IF NOT EXISTS status_ride (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL
+  name VARCHAR(40) NOT NULL
 );
 
 CREATE TABLE ride (
@@ -49,7 +52,14 @@ CREATE TABLE user_ride (
   FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
+CREATE TABLE tokens (
+  user_id INTEGER,
+  token VARCHAR(500),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 INSERT INTO gender (gender) VALUES ('Мужской');
 INSERT INTO gender (gender) VALUES ('Женский');
+INSERT INTO gender (gender) VALUES ('Другое');
 
 ALTER TABLE user_ride ADD CONSTRAINT unique_ride_user_idx UNIQUE (ride_id, user_id);

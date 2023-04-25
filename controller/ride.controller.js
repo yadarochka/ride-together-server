@@ -4,8 +4,20 @@ const RideService = require("../service/ride.service");
 class RideController {
   async createRide(req, res) {
     try {
-      const ride = req.body;
-      const newRide = await RideService.createRide(ride);
+      const driver_id = req.user.id;
+      const {departure_location, arrival_location, departure_date, available_seats, price, additional_details} = req.body;
+      const total_seats = available_seats;
+      const status_id = 1;
+      const newRide = await RideService.createRide(
+        driver_id,
+        departure_location,
+        arrival_location,
+        departure_date,
+        available_seats,
+        total_seats,
+        price,
+        additional_details,
+        status_id);
       res.json(newRide);
     } catch (error) {
       res.send(error.message);
@@ -26,6 +38,12 @@ class RideController {
   async getRidesByDriverId(req, res) {
     const driver_id = req.params.driver_id;
     const rides = await RideService.getRidesByDriverId(driver_id)
+    res.json(rides);
+  }
+
+  async getRidesByUserId(req, res) {
+    const user_id = req.params.user_id;
+    const rides = await RideService.getRidesByUserId(user_id)
     res.json(rides);
   }
 
@@ -51,7 +69,12 @@ class RideController {
   async addPassengerToRide(req, res) {
     const {ride_id, user_id} = req.body;
     const {code, message} = await RideService.addPassengerToRide(ride_id, user_id)
-    res.status(code).send(message)
+    res.status(code).json(message)
+  }
+
+  async getRidesWithFilters(req, res){
+    const rides = await RideService.getRidesWithFilters(req.body)
+    res.status(200).json(rides)
   }
 }
 

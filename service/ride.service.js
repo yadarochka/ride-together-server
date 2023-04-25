@@ -1,17 +1,15 @@
 const db = require("../db");
 
 class RideService {
-  async createRide(ride) {
-    const {
-      driver_id,
-      departure_location,
-      arrival_location,
-      departure_date,
-      available_seats,
-      total_seats,
-      price,
-      additional_details,
-    } = ride;
+  async createRide(driver_id,
+    departure_location,
+    arrival_location,
+    departure_date,
+    available_seats,
+    total_seats,
+    price,
+    additional_details,
+    status_id) {
     const newRide = await db.query(
       `INSERT INTO ride (
           driver_id,
@@ -21,7 +19,8 @@ class RideService {
           available_seats,
           total_seats,
           price,
-          additional_details) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+          additional_details,
+          status_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
       [
         driver_id,
         departure_location,
@@ -31,18 +30,25 @@ class RideService {
         total_seats,
         price,
         additional_details,
+        status_id
       ]
     );
     return newRide.rows[0];
   }
 
   async getAllRides() {
-    const allRides = await db.query(`SELECT * from ride`);
+    const allRides = await db.query(`SELECT ride.*, users.name AS driver_name
+    FROM ride
+    JOIN users ON ride.driver_id = users.id
+    WHERE departure_date > now()`);
     return allRides.rows;
   }
 
   async getRideById(rideId){
-    const ride = await db.query(`SELECT * from ride WHERE id = ${rideId}`);
+    const ride = await db.query(`SELECT ride.*, name as status
+    FROM ride JOIN status_ride 
+    ON ride.status_id = status_ride.id
+     WHERE id = ${rideId}`);
     if (ride.rows[0]){
       return {code: 200, ride: ride.rows[0]}
     }
@@ -52,6 +58,17 @@ class RideService {
   async getRidesByDriverId(driver_id) {
     const rides = await db.query(
       `SELECT * from ride WHERE driver_id = ${driver_id}`
+    );
+    return(rides.rows);
+  }
+  
+  async getRidesByUserId(user_id) {
+    const rides = await db.query(
+      `SELECT r.*
+      FROM ride r
+      JOIN user_ride ur ON r.id = ur.ride_id
+      WHERE ur.user_id = $1
+      ORDER BY r.departure_date ASC`,[user_id]
     );
     return(rides.rows);
   }
@@ -131,6 +148,20 @@ class RideService {
       const query = `ROLLBACK`;
       await db.query(query);
       return {code: 500, message: err.message}
+    }
+  }
+
+  async getRidesWithFilters({maxPrice, minPrice, maxSeats, minSeats}){
+    try {
+      const response = await db.query(`SELECT ride.*, users.name AS driver_name
+      FROM ride
+      JOIN users ON ride.driver_id = users.id 
+      WHERE departure_date > now() AND
+      price BETWEEN $1 AND $2 
+      AND available_seats BETWEEN $3 AND $4;`, [minPrice, maxPrice, minSeats, maxSeats])
+
+      return response.rows
+    } catch (err) {
     }
   }
 }
