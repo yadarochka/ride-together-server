@@ -1,7 +1,8 @@
 const db = require("../db");
 
 class RideService {
-  async createRide(driver_id,
+  async createRide(
+    driver_id,
     departure_location,
     arrival_location,
     departure_date,
@@ -9,7 +10,10 @@ class RideService {
     total_seats,
     price,
     additional_details,
-    status_id) {
+    status_id,
+    departure_location_name,
+    arrival_location_name
+  ) {
     const newRide = await db.query(
       `INSERT INTO ride (
           driver_id,
@@ -20,7 +24,10 @@ class RideService {
           total_seats,
           price,
           additional_details,
-          status_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+          status_id,
+          departure_location_name,
+          arrival_location_name) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
       [
         driver_id,
         departure_location,
@@ -30,7 +37,9 @@ class RideService {
         total_seats,
         price,
         additional_details,
-        status_id
+        status_id,
+        departure_location_name,
+        arrival_location_name,
       ]
     );
     return newRide.rows[0];
@@ -40,88 +49,82 @@ class RideService {
     const allRides = await db.query(`SELECT ride.*, users.name AS driver_name
     FROM ride
     JOIN users ON ride.driver_id = users.id
-    WHERE departure_date > now()`);
+    WHERE departure_date > now() AND status_id = 1`);
     return allRides.rows;
   }
 
-  async getRideById(rideId){
-    const ride = await db.query(`SELECT ride.*, name as status
-    FROM ride JOIN status_ride 
-    ON ride.status_id = status_ride.id
-     WHERE id = ${rideId}`);
-    if (ride.rows[0]){
-      return {code: 200, ride: ride.rows[0]}
+  async getRideById(rideId) {
+    const ride =
+      await db.query(`SELECT r.*, status_ride.name as status, users.name as driver_name, users.surname as driver_surname  FROM ride r JOIN status_ride ON r.status_id = status_ride.id JOIN users ON r.driver_id = users.id
+     WHERE r.id = ${rideId}`);
+    if (ride.rows[0]) {
+      return { code: 200, ride: ride.rows[0] };
     }
-    return {code: 404, ride: null}
+    return { code: 404, ride: null };
   }
 
   async getRidesByDriverId(driver_id) {
     const rides = await db.query(
       `SELECT * from ride WHERE driver_id = ${driver_id}`
     );
-    return(rides.rows);
+    return rides.rows;
   }
-  
+
   async getRidesByUserId(user_id) {
     const rides = await db.query(
-      `SELECT r.*
+      `(SELECT r.*, sr.name as status
+        FROM ride r
+        JOIN user_ride ur ON r.id = ur.ride_id
+       JOIN status_ride sr ON r.status_id = sr.id
+        WHERE ur.user_id = $1)
+  UNION 
+  (SELECT r.*, sr.name as status
       FROM ride r
-      JOIN user_ride ur ON r.id = ur.ride_id
-      WHERE ur.user_id = $1
-      ORDER BY r.departure_date ASC`,[user_id]
+       JOIN status_ride sr ON r.status_id = sr.id
+      WHERE driver_id = $1
+  )	  ORDER BY departure_date ASC`,
+      [user_id]
     );
-    return(rides.rows);
+    return rides.rows;
+  }
+
+  async getPassengersByRideId(ride_id) {
+    const passengers = await db.query(
+      `SELECT u.id, u.name, u.surname
+      FROM users u
+      JOIN user_ride ur ON u.id = ur.user_id
+      JOIN ride r ON r.id = ur.ride_id
+      WHERE r.id = $1`,
+      [ride_id]
+    );
+    return passengers.rows;
   }
 
   async getRidesByCoordinates(coordinates) {
     const { lng, lat } = coordinates;
     const query =
-      "SELECT * FROM ride WHERE ST_Distance_Sphere(departure_location, ST_MakePoint($1, $2)) < 10000";
+      "SELECT * FROM ride WHERE _Sphere(departure_locatiST_Distanceon, ST_MakePoint($1, $2)) < 10000";
     const values = [lng, lat];
     const rides = await db.query(query, values);
-    return(rides.rows);
+    return rides.rows;
   }
 
-  async updateRide(id, newRide){
-    const {
-      departure_location,
-      arrival_location,
-      departure_date,
-      available_seats,
-      total_seats,
-      price,
-      additional_details,
-    } = newRide;
-    const updatedRide = await db.query(
+  async cancelRide(ride_id) {
+    const cancelledRide = await db.query(
       `UPDATE ride SET 
-      departure_location = $1, 
-      arrival_location = $2, 
-      departure_date = $3, 
-      available_seats = $4, 
-      total_seats = $5, 
-      price = $6,
-      additional_details = $7
-      WHERE id = ${id} RETURNING *`,
-      [
-        departure_location,
-        arrival_location,
-        departure_date,
-        available_seats,
-        total_seats,
-        price,
-        additional_details,
-      ]
+      status_id = 3
+      WHERE id = $1 RETURNING *`,
+      [ride_id]
     );
-    return(updatedRide.rows[0]);
+    return cancelledRide.rows[0];
   }
 
-  async deleteRide(id){
-    try{
+  async deleteRide(id) {
+    try {
       await db.query(`DELETE FROM ride WHERE id = ${id}`);
-      return {code: 204, message:"Поездка удалена"}
-    }
-    catch(err){
-      return {code: 400, message:"Ошибка"}
+      return { code: 204, message: "Поездка удалена" };
+    } catch (err) {
+      return { code: 400, message: "Ошибка" };
     }
   }
 
@@ -143,26 +146,91 @@ class RideService {
       COMMIT;
       `;
       await db.query(query);
-      return {code: 200, message:"Пассажир добавлен в поездку"}
+      return { code: 200, message: "Пассажир добавлен в поездку" };
     } catch (err) {
       const query = `ROLLBACK`;
       await db.query(query);
-      return {code: 500, message: err.message}
+      return { code: 500, message: err.message };
     }
   }
 
-  async getRidesWithFilters({maxPrice, minPrice, maxSeats, minSeats}){
+  async deletePassengerFromRide(ride_id, user_id) {
     try {
-      const response = await db.query(`SELECT ride.*, users.name AS driver_name
+      const query = `BEGIN; DELETE FROM user_ride WHERE ride_id = ${ride_id} AND user_id = ${user_id}; UPDATE ride SET available_seats = available_seats + 1 WHERE id = ${ride_id}; COMMIT;`;
+      await db.query(query);
+      return { code: 200, message: "Пассажир удален из поездки" };
+    } catch (err) {
+      const query = ROLLBACK;
+      await db.query(query);
+      return { code: 500, message: err.message };
+    }
+  }
+
+  async getRidesWithFilters({
+    maxPrice,
+    minPrice,
+    maxSeats,
+    minSeats,
+    departure_location,
+    arrival_location,
+    minRadius,
+    maxRadius,
+    date,
+  }) {
+    try {
+      const response = await db.query(
+        `SELECT ride.*, users.name AS driver_name
       FROM ride
       JOIN users ON ride.driver_id = users.id 
-      WHERE departure_date > now() AND
-      price BETWEEN $1 AND $2 
-      AND available_seats BETWEEN $3 AND $4;`, [minPrice, maxPrice, minSeats, maxSeats])
-
-      return response.rows
+      WHERE pg_catalog.date_trunc('day', departure_date::date) = pg_catalog.date_trunc('day', $11::date)
+      AND price BETWEEN $1 AND $2 
+      AND available_seats BETWEEN $3 AND $4
+      AND status_id = 1
+      AND ST_DistanceSphere(ST_MakePoint(departure_location[1],departure_location[2]),ST_MakePoint($5,$6)) BETWEEN $9 AND $10
+      AND ST_DistanceSphere(ST_MakePoint(arrival_location[1],arrival_location[2]), ST_MakePoint($7, $8)) BETWEEN $9 AND $10
+      ;`,
+        [
+          minPrice,
+          maxPrice,
+          minSeats,
+          maxSeats,
+          departure_location[0],
+          departure_location[1],
+          arrival_location[0],
+          arrival_location[1],
+          minRadius * 1000,
+          maxRadius * 1000,
+          date,
+        ]
+      );
+      console.log([
+        minPrice,
+        maxPrice,
+        minSeats,
+        maxSeats,
+        departure_location[0],
+        departure_location[1],
+        arrival_location[0],
+        arrival_location[1],
+        minRadius * 1000,
+        maxRadius * 1000,
+        date,
+      ]);
+      return response.rows;
     } catch (err) {
+      console.error(err.message);
     }
+  }
+
+  async isPassengerInRide(user_id, ride_id) {
+    const inRide = (
+      await db.query(
+        "SELECT EXISTS(SELECT * FROM user_ride WHERE user_id = $1 AND ride_id = $2)",
+        [user_id, ride_id]
+      )
+    ).rows[0];
+
+    return inRide;
   }
 }
 

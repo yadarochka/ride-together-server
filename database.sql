@@ -9,8 +9,8 @@ CREATE TABLE users (
   surname VARCHAR(30) NOT NULL,
   activation_link VARCHAR(50),
   is_activate BOOLEAN,
-  phone VARCHAR(15) NOT NULL UNIQUE,
-  email VARCHAR(30) NOT NULL UNIQUE,
+  phone VARCHAR(30) NOT NULL UNIQUE,
+  email VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(60) NOT NULL,
   gender_id INTEGER NOT NULL, 
   FOREIGN KEY (gender_id) REFERENCES gender (id)
@@ -36,6 +36,8 @@ CREATE TABLE ride (
   status_id INTEGER NOT NULL,
   departure_location NUMERIC[] NOT NULL,
   arrival_location NUMERIC[] NOT NULL,
+  departure_location_name VARCHAR(100),
+  arrival_location_name VARCHAR(100),
   departure_date TIMESTAMP WITH TIME ZONE NOT NULL,
   available_seats INTEGER NOT NULL,
   total_seats INTEGER NOT NULL,
@@ -61,5 +63,10 @@ CREATE TABLE tokens (
 INSERT INTO gender (gender) VALUES ('Мужской');
 INSERT INTO gender (gender) VALUES ('Женский');
 INSERT INTO gender (gender) VALUES ('Другое');
+
+INSERT INTO status_ride (name) VALUES ('Планируется');
+INSERT INTO status_ride (name) VALUES ('Завершена');
+INSERT INTO status_ride (name) VALUES ('Отменена');
+
 
 ALTER TABLE user_ride ADD CONSTRAINT unique_ride_user_idx UNIQUE (ride_id, user_id);
