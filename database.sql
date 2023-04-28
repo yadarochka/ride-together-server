@@ -1,4 +1,4 @@
-CREATE TABLE gender (
+  CREATE TABLE gender (
   id SERIAL PRIMARY KEY,
   gender VARCHAR(10) NOT NULL
 );
@@ -45,7 +45,7 @@ CREATE TABLE ride (
   additional_details VARCHAR(255),
   FOREIGN KEY (driver_id) REFERENCES users (id),
   FOREIGN KEY (status_id) REFERENCES status_ride (id)
-);
+); 
 
 CREATE TABLE user_ride (
   ride_id INTEGER, 
