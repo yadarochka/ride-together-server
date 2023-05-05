@@ -1,4 +1,6 @@
-  CREATE TABLE gender (
+CREATE EXTENSION postgis;
+
+CREATE TABLE gender (
   id SERIAL PRIMARY KEY,
   gender VARCHAR(10) NOT NULL
 );
