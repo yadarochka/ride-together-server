@@ -13,26 +13,26 @@ require("dotenv").config();
 const app = express();
 
 const corsOptions = {
-  origin : true,
-  credentials: true
-}
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+};
 
-app.use(express.json())
-app.use(cookieParser())
+app.use(express.json());
+app.use(cookieParser());
 app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use("/api/ride", rideRouter);
 app.use("/api/rating", ratingRouter);
-app.use("/api/ping", pingRouter)
-app.use("/api/auth", authRouter)
-app.use("/api/profile", userRouter)
+app.use("/api/ping", pingRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/profile", userRouter);
 
-app.use(errorMiddleware)
+app.use(errorMiddleware);
 
 const PORT = process.env.APP_PORT;
 const server = app.listen(PORT, function () {
   console.log(`Приложение запущено PORT = ${PORT}`);
 });
 
-module.exports = server
+module.exports = server;
