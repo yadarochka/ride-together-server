@@ -3,31 +3,68 @@ const rideRouter = new Router();
 const rideController = require("../controller/ride.controller");
 const authMiddleware = require("../middleware/auth-middleware");
 
+// создание поездки
 rideRouter.post("/", authMiddleware, rideController.createRide);
-rideRouter.get("/", authMiddleware, rideController.getAllRides);
+// получение всех поездок
+rideRouter.get("/", rideController.getAllRides);
 
-rideRouter.post("/filter", authMiddleware, rideController.getRidesWithFilters);
+// получение поездок с заданными фильтрами
+rideRouter.post("/filter", rideController.getRidesWithFilters);
 
+// получение всех поездок по id пользователя
 rideRouter.get(
   "/rides_from_user/:user_id",
   authMiddleware,
   rideController.getRidesByUserId
 );
 
+// получение поездки по id
 rideRouter.get("/:ride_id", authMiddleware, rideController.getRideById);
 
-rideRouter.put("/:ride_id", rideController.cancelRide);
-rideRouter.delete("/:ride_id", rideController.deleteRide);
+// отмена поездки
+rideRouter.put("/:ride_id", authMiddleware, rideController.cancelRide);
+//удаление поездки
+rideRouter.delete("/:ride_id", authMiddleware, rideController.deleteRide);
 
-rideRouter.get("/driver/:driver_id", rideController.getRidesByDriverId);
+// получение всех поездок по id водителя
+rideRouter.get(
+  "/driver/:driver_id",
+  authMiddleware,
+  rideController.getRidesByDriverId
+);
 
-rideRouter.post("/location", rideController.getRidesByCoordinates);
+// получение списка поездок по заданным координатам
+rideRouter.post(
+  "/location",
+  authMiddleware,
+  rideController.getRidesByCoordinates
+);
 
-rideRouter.post("/passengers", rideController.addPassengerToRide);
-rideRouter.post("/passengers/leave", rideController.deletePassengerFromRide);
+// добавление пассажиров в поездку
+rideRouter.post(
+  "/passengers",
+  authMiddleware,
+  rideController.addPassengerToRide
+);
+// удаление пассажиров из поездки
+rideRouter.post(
+  "/passengers/leave",
+  authMiddleware,
+  rideController.deletePassengerFromRide
+);
 
-rideRouter.get("/passengers/:ride_id", rideController.getPassengersByRideId);
+// получение всех пассажиров по id поездки
+rideRouter.get(
+  "/passengers/:ride_id",
+  authMiddleware,
+  rideController.getPassengersByRideId
+);
 
-rideRouter.post("/user-in-ride/:ride_id", rideController.isPassengerInRide);
+// проверка, есть ли пользователь в поездке
+rideRouter.post(
+  "/user-in-ride/:ride_id",
+  authMiddleware,
+  rideController.isPassengerInRide
+);
 
 module.exports = rideRouter;
