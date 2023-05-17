@@ -1,6 +1,7 @@
 const db = require("../db");
 const UserDto = require("../dtos/user-dto");
 const ApiError = require("../middleware/exceptions/api-error");
+const tokenService = require("./token.service");
 
 class UserService {
   async createUser(user) {
@@ -18,25 +19,45 @@ class UserService {
   }
 
   async getUser(id) {
-    const user = (await db.query(`SELECT u.*, g.gender AS gender_name 
+    const user = (
+      await db.query(
+        `SELECT u.*, g.gender AS gender_name 
     FROM users u 
-    JOIN gender g ON u.gender_id = g.id WHERE u.id = $1`, [id])).rows[0];
-    if (user){
-      const userDto = new UserDto(user)
-      return userDto
+    JOIN gender g ON u.gender_id = g.id WHERE u.id = $1`,
+        [id]
+      )
+    ).rows[0];
+    if (user) {
+      const userDto = new UserDto(user);
+      return userDto;
     }
-    
-    throw ApiError.BadRequest("Пользователь с таким id не существует");
 
+    throw ApiError.BadRequest("Пользователь с таким id не существует");
   }
 
   async updateUser(id, user) {
-    const { name, surname, phone, password, gender_id } = user;
-    const newPerson = await db.query(
-      `UPDATE users SET name = $1, surname = $2, phone = $3, password = $4, gender_id = $5 WHERE id = ${id} RETURNING *`,
-      [name, surname, phone, password, gender_id]
+    const { name, surname, phone, gender_id } = user;
+    await db.query(
+      `UPDATE users SET name = $1, surname = $2, phone = $3,  gender_id = $4 WHERE id = ${id}`,
+      [name, surname, phone, gender_id]
     );
-    return newPerson.rows[0];
+
+    const newUser = (
+      await db.query(
+        `SELECT u.*, g.gender AS gender_name
+        FROM users u
+        JOIN gender g ON u.gender_id = g.id WHERE u.id = $1;`,
+        [id]
+      )
+    ).rows[0];
+
+    const userDto = new UserDto(newUser);
+
+    const tokens = tokenService.generateTokens({ ...userDto });
+
+    await tokenService.saveRefreshToken(userDto.id, tokens.refreshToken);
+
+    return { ...tokens, userDto };
   }
 
   async deleteUser(id) {
