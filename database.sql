@@ -1,4 +1,5 @@
 CREATE EXTENSION postgis;
+CREATE EXTENSION pgAgent;
 
 CREATE TABLE gender (
   id SERIAL PRIMARY KEY,
@@ -19,13 +20,18 @@ CREATE TABLE users (
 );
 
 CREATE TABLE rating(
-  id SERIAL PRIMARY KEY,
-  from_user_id INTEGER, 
-  to_user_id INTEGER, 
+  ride_id INTEGER NOT NULL,
+  from_user_id INTEGER NOT NULL, 
+  to_user_id INTEGER NOT NULL, 
   value INTEGER NOT NULL,
+  FOREIGN KEY (to_user_id) REFERENCES users (id),
   FOREIGN KEY (from_user_id) REFERENCES users (id),
-  FOREIGN KEY (to_user_id) REFERENCES users (id)
+  FOREIGN KEY (ride_id) REFERENCES ride (id)
 );
+
+CREATE UNIQUE INDEX idx_rating_unique
+ON rating (ride_id, from_user_id, to_user_id);
+
 
 CREATE TABLE IF NOT EXISTS status_ride (
   id SERIAL PRIMARY KEY,
@@ -72,3 +78,7 @@ INSERT INTO status_ride (name) VALUES ('Отменена');
 
 
 ALTER TABLE user_ride ADD CONSTRAINT unique_ride_user_idx UNIQUE (ride_id, user_id);
+
+ALTER TABLE rating ADD CONSTRAINT unique_to_user_from_user_idx UNIQUE (ride_id, from_user_id, to_user_id);
+
+CREATE UNIQUE INDEX idx_rating_unique ON rating (ride_id, from_user_id, to_user_id);
