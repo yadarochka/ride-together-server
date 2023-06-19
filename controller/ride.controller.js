@@ -66,7 +66,6 @@ class RideController {
   }
 
   async cancelRide(req, res) {
-    console.log("ыыы");
     const ride_id = req.params.ride_id;
     const response = await RideService.cancelRide(ride_id);
     res.json(response);
