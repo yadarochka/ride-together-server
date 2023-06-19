@@ -203,6 +203,19 @@ class RideService {
           date,
         ]
       );
+      console.log([
+        minPrice,
+        maxPrice,
+        minSeats,
+        maxSeats,
+        departure_location[0],
+        departure_location[1],
+        arrival_location[0],
+        arrival_location[1],
+        minRadius * 1000,
+        maxRadius * 1000,
+        date,
+      ]);
       return response.rows;
     } catch (err) {
       console.error(err.message);
